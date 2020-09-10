@@ -1,5 +1,5 @@
 /*
-    TKGTOOLS stands for Tgpp Key Generator Tools.
+    TKGTOOLS stands for Tgpp Key Generator Tools(MILENAGE defined in 3GPP TS 35.205).
     It implemente f1 - f5, f1*, f5* functions defined in 3GPP TS 35.205/35.206.
     These functions are also known as MILENAGE Algorithm Set.
     Test data could be find in TS 35.208.
@@ -66,7 +66,6 @@ type TKGTOOLS struct{
   And with TKGTOOLS "object", you can call F1, F2345, F1star and F5star functions.
   Additional, r1-r5, c1-c5 values used in functions is defined in "object".
   And default value of r1-r5, c1-c5 is below:
-  ```
     inst.R1 = 64
     inst.R2 = 0
     inst.R3 = 32
@@ -77,7 +76,6 @@ type TKGTOOLS struct{
     inst.C3 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}
     inst.C4 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04}
     inst.C5 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08}
-  ```
   Modify it if necessary after NewTKGTOOLS function call.
   All functions need byte array pointer, not byte array copy, that make functions runs in a quick way.
 */
