@@ -2,7 +2,7 @@
 
 TKGTOOLS stands for Tgpp Key Generator Tools.
 
-It implemente f1 - f5, f1*, f5* functions in 3GPP TS 35.206.
+It implemente f1 - f5, f1*, f5* functions defined in 3GPP TS 35.205/35.206.
 
 These functions are also known as MILENAGE Algorithm Set.
 
