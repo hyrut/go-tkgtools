@@ -1,9 +1,11 @@
+/*
+    TKGTOOLS stands for Tgpp Key Generator Tools.
+    It implemente f1 - f5, f1*, f5* functions in 3GPP TS 35.206.
+    Test data could be find in 35.208.
+    Specification is here: https://www.3gpp.org/ftp/Specs/archive/35_series
+*/
 package tkgtools
 
-/*
-    TKGTOOLS is Tgpp Key Generator Tools.
-    Support 35.206, f1 - f5, f1*, f5*
-*/
 var S [256]byte = [256]byte{
  99,124,119,123,242,107,111,197, 48,  1,103, 43,254,215,171,118,
 202,130,201,125,250, 89, 71,240,173,212,162,175,156,164,114,192,
@@ -42,6 +44,9 @@ var Xtime[256]byte = [256]byte{
 251,249,255,253,243,241,247,245,235,233,239,237,227,225,231,229,
 }
 
+/*
+  "class" TKGTOOLS contains r1-r5, c1-c5 value which are used in f1-f5, f1*, f5* functions.
+*/
 type TKGTOOLS struct{
   R1 uint8
   R2 uint8
@@ -55,6 +60,24 @@ type TKGTOOLS struct{
   C5 [16]byte
 }
 
+/*
+  Use this function by creating a TKGTOOLS "object".
+  And with TKGTOOLS "object", you can call F1, F2345, F1star and F5star functions.
+  Additional, r1-r5, c1-c5 values used in functions is defined in "object".
+  And default value of r1-r5, c1-c5 is below:
+  inst.R1 = 64
+  inst.R2 = 0
+  inst.R3 = 32
+  inst.R4 = 64
+  inst.R5 = 96
+  inst.C1 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+  inst.C2 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}
+  inst.C3 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02}
+  inst.C4 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04}
+  inst.C5 = [16]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08}
+  Modify it if necessary after NewTKGTOOLS function call.
+  All functions need byte array pointer, not byte array copy, that make functions runs in a quick way.
+*/
 func NewTKGTOOLS() *TKGTOOLS{
   inst := new(TKGTOOLS)
   /*
@@ -219,6 +242,15 @@ func _computeOPc(op *[16]byte, op_c *[16]byte){
   return
 }
 
+/*
+  Function F1 is used for mac_a calculation.
+  Input is key, rand, sqn, amf, op / opc
+  Call it like:
+    tkg = tkgtools.NewTKGTOOLS()
+    tkg.F1(&key, &rand, &sqn , &amf, &mac_a, &op, nil)
+    // tkg.F1(&key, &rand, &sqn , &amf, &mac_a, nil, &opc)
+  Transfer op if you have, or opc if you have, keep another one as nil.
+*/
 func (tp *TKGTOOLS)F1(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]byte, mac_a *[8]byte, op *[16]byte, opc *[16]byte){
   var op_c [16]byte
   var temp [16]byte
@@ -269,6 +301,15 @@ func (tp *TKGTOOLS)F1(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]byte,
   return
 }
 
+/*
+  Function F2345 is used for res, ck, ik and ak calculation.
+  Input is key, rand, op / opc
+  Call it like:
+    tkg = tkgtools.NewTKGTOOLS()
+    tkg.F2345(&key, &rand, &res, &ck, &ik, &ak, &op, nil)
+    // tkg.F2345(&key, &rand, &res, &ck, &ik, &ak, nil, &opc)
+  Transfer op if you have, or opc if you have, keep another one as nil.
+*/
 func (tp *TKGTOOLS)F2345 (key *[16]byte, rand *[16]byte, res *[8]byte, ck *[16]byte, ik *[16]byte, ak *[6]byte, op *[16]byte, opc *[16]byte){
   var op_c [16]byte
   var temp [16]byte
@@ -343,6 +384,15 @@ func (tp *TKGTOOLS)F2345 (key *[16]byte, rand *[16]byte, res *[8]byte, ck *[16]b
   return
 }
 
+/*
+  Function F1 is used for mac_s calculation.
+  Input is key, rand, sqn, amf, op / opc
+  Call it like:
+    tkg = tkgtools.NewTKGTOOLS()
+    tkg.F1star(&key, &rand, &sqn , &amf, &mac_s, &op, nil)
+    // tkg.F1star(&key, &rand, &sqn , &amf, &mac_s, nil, &opc)
+  Transfer op if you have, or opc if you have, keep another one as nil.
+*/
 func (tp *TKGTOOLS)F1star(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]byte, mac_s *[8]byte, op *[16]byte, opc *[16]byte){
   var op_c [16]byte
   var temp[16]byte
@@ -392,6 +442,15 @@ func (tp *TKGTOOLS)F1star(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]b
   return
 }
 
+/*
+  Function F5star is used for ak calculation.
+  Input is key, rand, op / opc
+  Call it like:
+    tkg = tkgtools.NewTKGTOOLS()
+    tkg.F5star(&key, &rand, &ak, &op, nil)
+    // tkg.F5star(&key, &rand, &ak, nil, &opc)
+  Transfer op if you have, or opc if you have, keep another one as nil.
+*/
 func (tp *TKGTOOLS)F5star(key *[16]byte, rand *[16]byte, ak *[6]byte, op *[16]byte, opc *[16]byte){
   var op_c [16]byte
   var temp [16]byte
