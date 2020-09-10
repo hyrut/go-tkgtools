@@ -1,6 +1,6 @@
 /*
     TKGTOOLS stands for Tgpp Key Generator Tools.
-    It implemente f1 - f5, f1*, f5* functions in 3GPP TS 35.206.
+    It implemente f1 - f5, f1*, f5* functions(MILENAGE) in 3GPP TS 35.206.
     Test data could be find in 35.208.
     Specification is here: https://www.3gpp.org/ftp/Specs/archive/35_series
 */
