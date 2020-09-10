@@ -1,6 +1,6 @@
 # go-tkgtools
 
-TKGTOOLS stands for Tgpp Key Generator Tools.
+TKGTOOLS stands for Tgpp Key Generator Tools(MILENAGE defined in 3GPP TS35.205).
 
 It implemente f1 - f5, f1*, f5* functions defined in 3GPP TS 35.205/35.206.
 
@@ -46,4 +46,10 @@ With default R and C value, functions calculation performance is below:
 
 * F2345 is around 3500ns.
 
-Tested on a Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz 1.90GHz, Windows 10.
+Tested on a Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz 1.90GHz, Windows 10(WSL, Ubuntu 20).
+
+* F1 is around 3000ns.
+
+* F2345 is around 4000ns.
+
+Tested on a Intel(R) Xeon(R) Gold 5218 CPU @ 2.30GHz, Ubuntu 18.
