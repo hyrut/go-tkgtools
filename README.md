@@ -2,7 +2,7 @@
 
 source code for project go-tkgtools
 
-this tool is an implementation of f1-f5, f1*, f5* functions defined in 3GPP 35.206.
+this tool is an implementation of f1-f5, f1*, f5* functions defined in 3GPP TS 35.206.
 
 
 Use is as:
