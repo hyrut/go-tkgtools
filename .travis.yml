@@ -1,0 +1,9 @@
+language: go
+
+go:
+        - "1.13"
+
+script:
+        - go build tkgtools.go
+        - go build examples/test_tkgtools.go
+        - go build examples/test_tkgtools2.go
