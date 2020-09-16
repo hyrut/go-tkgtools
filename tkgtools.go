@@ -59,6 +59,7 @@ type TKGTOOLS struct{
   C3 [16]byte
   C4 [16]byte
   C5 [16]byte
+  roundKeys [11][4][4]byte
 }
 
 /*
@@ -120,24 +121,22 @@ func _ringShiftLeft128Bits(data *[16]byte, nbit uint8){
   return
 }
 
-var roundKeys [11][4][4]byte
-
-func _rijndaelKeySchedule(key *[16]byte){
+func (tp *TKGTOOLS)_rijndaelKeySchedule(key *[16]byte){
   for i:=0; i<16; i++{
-    roundKeys[0][i&0x03][i>>2] = key[i]
+    tp.roundKeys[0][i&0x03][i>>2] = key[i]
   }
 
   roundConst := byte(1)
   for i:=1; i<11; i++{
-    roundKeys[i][0][0] = S[roundKeys[i-1][1][3]] ^ roundKeys[i-1][0][0] ^ roundConst
-		roundKeys[i][1][0] = S[roundKeys[i-1][2][3]] ^ roundKeys[i-1][1][0]
-		roundKeys[i][2][0] = S[roundKeys[i-1][3][3]] ^ roundKeys[i-1][2][0]
-		roundKeys[i][3][0] = S[roundKeys[i-1][0][3]] ^ roundKeys[i-1][3][0]
+    tp.roundKeys[i][0][0] = S[tp.roundKeys[i-1][1][3]] ^ tp.roundKeys[i-1][0][0] ^ roundConst
+		tp.roundKeys[i][1][0] = S[tp.roundKeys[i-1][2][3]] ^ tp.roundKeys[i-1][1][0]
+		tp.roundKeys[i][2][0] = S[tp.roundKeys[i-1][3][3]] ^ tp.roundKeys[i-1][2][0]
+		tp.roundKeys[i][3][0] = S[tp.roundKeys[i-1][0][3]] ^ tp.roundKeys[i-1][3][0]
 
 		for j:=0; j<4; j++{
-			roundKeys[i][j][1] = roundKeys[i-1][j][1] ^ roundKeys[i][j][0]
-			roundKeys[i][j][2] = roundKeys[i-1][j][2] ^ roundKeys[i][j][1]
-			roundKeys[i][j][3] = roundKeys[i-1][j][3] ^ roundKeys[i][j][2]
+			tp.roundKeys[i][j][1] = tp.roundKeys[i-1][j][1] ^ tp.roundKeys[i][j][0]
+			tp.roundKeys[i][j][2] = tp.roundKeys[i-1][j][2] ^ tp.roundKeys[i][j][1]
+			tp.roundKeys[i][j][3] = tp.roundKeys[i-1][j][3] ^ tp.roundKeys[i][j][2]
 		}
 		roundConst = Xtime[roundConst]
   }
@@ -208,26 +207,26 @@ func _mixColumn(state *[4][4]byte){
   return
 }
 
-func _rijndaelEncrypt(input *[16]byte, output *[16]byte){
+func (tp *TKGTOOLS)_rijndaelEncrypt(input *[16]byte, output *[16]byte){
   var state [4][4]byte
   /* initialise state array from input byte string */
   for i:=0; i<16; i++{
     state[i & 0x3][i>>2] = input[i]
   }
   /* add first round_key */
-  _keyAdd(&state, &roundKeys, 0);
+  _keyAdd(&state, &tp.roundKeys, 0);
   /* do lots of full rounds */
   r := 1
   for r=1; r<=9; r++{
     _byteSub(&state)
     _shiftRow(&state)
     _mixColumn(&state)
-    _keyAdd(&state, &roundKeys, r)
+    _keyAdd(&state, &tp.roundKeys, r)
   }
   /* final round */
   _byteSub(&state);
   _shiftRow(&state);
-  _keyAdd(&state, &roundKeys, r)
+  _keyAdd(&state, &tp.roundKeys, r)
   /* produce output byte string from state array */
   for i:=0; i<16; i++{
     output[i] = state[i & 0x3][i>>2]
@@ -235,8 +234,8 @@ func _rijndaelEncrypt(input *[16]byte, output *[16]byte){
   return
 }
 
-func _computeOPc(op *[16]byte, op_c *[16]byte){
-  _rijndaelEncrypt(op, op_c)
+func (tp *TKGTOOLS)_computeOPc(op *[16]byte, op_c *[16]byte){
+  tp._rijndaelEncrypt(op, op_c)
   for i:=0; i<16; i++{
     op_c[i] ^= op[i]
   }
@@ -260,16 +259,16 @@ func (tp *TKGTOOLS)F1(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]byte,
   var rijndaelInput [16]byte
   var i uint8
 
-  _rijndaelKeySchedule(key)
+  tp._rijndaelKeySchedule(key)
   if opc==nil{
-    _computeOPc(op, &op_c)
+    tp._computeOPc(op, &op_c)
   }else{
     op_c = *opc
   }
   for i=0; i<16; i++{
     rijndaelInput[i] = rand[i] ^ op_c[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &temp)
+  tp._rijndaelEncrypt(&rijndaelInput, &temp)
   for i=0; i<6; i++{
     in1[i] = sqn[i]
     in1[i+8] = sqn[i]
@@ -292,7 +291,7 @@ func (tp *TKGTOOLS)F1(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]byte,
   for i=0; i<16; i++{
     rijndaelInput[i] ^= temp[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &out1)
+  tp._rijndaelEncrypt(&rijndaelInput, &out1)
   for i=0; i<16; i++{
     out1[i] ^= op_c[i]
   }
@@ -318,16 +317,16 @@ func (tp *TKGTOOLS)F2345 (key *[16]byte, rand *[16]byte, res *[8]byte, ck *[16]b
   var rijndaelInput [16]byte
   var i uint8
 
-  _rijndaelKeySchedule(key)
+  tp._rijndaelKeySchedule(key)
   if opc==nil{
-    _computeOPc(op, &op_c)
+    tp._computeOPc(op, &op_c)
   }else{
     op_c = *opc
   }
   for i=0; i<16; i++{
     rijndaelInput[i] = rand[i] ^ op_c[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &temp);
+  tp._rijndaelEncrypt(&rijndaelInput, &temp);
   /* To obtain output block OUT2: XOR OPc and TEMP,    *
    * rotate by r2=0, and XOR on the constant c2 (which *
    * is all zeroes except that the last bit is 1).     */
@@ -338,7 +337,7 @@ func (tp *TKGTOOLS)F2345 (key *[16]byte, rand *[16]byte, res *[8]byte, ck *[16]b
   for i=0; i<16; i++{
     rijndaelInput[i] ^= tp.C2[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &out)
+  tp._rijndaelEncrypt(&rijndaelInput, &out)
   for i=0; i<16; i++{
     out[i] ^= op_c[i]
   }
@@ -358,7 +357,7 @@ func (tp *TKGTOOLS)F2345 (key *[16]byte, rand *[16]byte, res *[8]byte, ck *[16]b
   for i=0; i<16; i++{
     rijndaelInput[i] ^= tp.C3[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &out)
+  tp._rijndaelEncrypt(&rijndaelInput, &out)
   for i=0; i<16; i++{
     out[i] ^= op_c[i]
   }
@@ -375,7 +374,7 @@ func (tp *TKGTOOLS)F2345 (key *[16]byte, rand *[16]byte, res *[8]byte, ck *[16]b
   for i=0; i<16; i++{
     rijndaelInput[i] ^= tp.C4[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &out)
+  tp._rijndaelEncrypt(&rijndaelInput, &out)
   for i=0; i<16; i++{
     out[i] ^= op_c[i]
   }
@@ -402,16 +401,16 @@ func (tp *TKGTOOLS)F1star(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]b
   var rijndaelInput[16]byte
   var i uint8
 
-  _rijndaelKeySchedule(key);
+  tp._rijndaelKeySchedule(key);
   if opc==nil{
-    _computeOPc(op, &op_c)
+    tp._computeOPc(op, &op_c)
   }else{
     op_c = *opc
   }
   for i=0; i<16; i++{
     rijndaelInput[i] = rand[i] ^ op_c[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &temp)
+  tp._rijndaelEncrypt(&rijndaelInput, &temp)
   for i=0; i<6; i++{
     in1[i] = sqn[i]
     in1[i+8] = sqn[i]
@@ -433,7 +432,7 @@ func (tp *TKGTOOLS)F1star(key *[16]byte, rand *[16]byte, sqn *[6]byte, amf *[2]b
   for i=0; i<16; i++{
     rijndaelInput[i] ^= temp[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &out1)
+  tp._rijndaelEncrypt(&rijndaelInput, &out1)
   for i=0; i<16; i++{
     out1[i] ^= op_c[i]
   }
@@ -459,16 +458,16 @@ func (tp *TKGTOOLS)F5star(key *[16]byte, rand *[16]byte, ak *[6]byte, op *[16]by
   var rijndaelInput [16]byte
   var i uint8
 
-  _rijndaelKeySchedule(key)
+  tp._rijndaelKeySchedule(key)
   if opc==nil{
-    _computeOPc(op, &op_c)
+    tp._computeOPc(op, &op_c)
   }else{
     op_c = *opc
   }
   for i=0; i<16; i++{
     rijndaelInput[i] = rand[i] ^ op_c[i]
   }
-  _rijndaelEncrypt(&rijndaelInput, &temp)
+  tp._rijndaelEncrypt(&rijndaelInput, &temp)
   /* To obtain output block OUT5: XOR OPc and TEMP,         *
    * rotate by r5=96, and XOR on the constant c5 (which     *
    * is all zeroes except that the 3rd from last bit is 1). */
@@ -480,7 +479,7 @@ func (tp *TKGTOOLS)F5star(key *[16]byte, rand *[16]byte, ak *[6]byte, op *[16]by
     rijndaelInput[i] ^= tp.C5[i]
   }
 
-  _rijndaelEncrypt(&rijndaelInput, &out)
+  tp._rijndaelEncrypt(&rijndaelInput, &out)
   for i=0; i<16; i++{
     out[i] ^= op_c[i]
   }
