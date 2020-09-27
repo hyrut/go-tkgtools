@@ -11,7 +11,6 @@ import "bytes"
 import "encoding/binary"
 import "crypto/hmac"
 import "crypto/sha256"
-import "fmt"
 
 var S [256]byte = [256]byte{
  99,124,119,123,242,107,111,197, 48,  1,103, 43,254,215,171,118,
@@ -515,7 +514,6 @@ func (tp *TKGTOOLS)ResStar(serviceNwName string, rand *[16]byte, res *[8]byte, c
   snnBytes := []byte(serviceNwName)
   lsnn := len(snnBytes)
   lsnnBytes := _intToBytes(lsnn)[6:]
-  fmt.Println(lsnnBytes)
   message := _bytesCombine([]byte{0x6B}, snnBytes, lsnnBytes, (*rand)[:], []byte{0x00, 0x10}, (*res)[:], []byte{0x00, 0x08})
   hash := hmac.New(sha256.New, secret)
   hash.Write(message)
