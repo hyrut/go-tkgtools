@@ -7,6 +7,12 @@
 */
 package tkgtools
 
+import "bytes"
+import "encoding/binary"
+import "crypto/hmac"
+import "crypto/sha256"
+import "fmt"
+
 var S [256]byte = [256]byte{
  99,124,119,123,242,107,111,197, 48,  1,103, 43,254,215,171,118,
 202,130,201,125,250, 89, 71,240,173,212,162,175,156,164,114,192,
@@ -487,4 +493,32 @@ func (tp *TKGTOOLS)F5star(key *[16]byte, rand *[16]byte, ak *[6]byte, op *[16]by
     ak[i] = out[i]
   }
   return
+}
+
+/*
+ResStar is for 5G AKA.
+Check 3GPP TS 33.501 A.4 for detail.
+*/
+func _intToBytes(n int) []byte {
+    data := int64(n)
+    byteBuf := bytes.NewBuffer([]byte{})
+    binary.Write(byteBuf, binary.BigEndian, data)
+    return byteBuf.Bytes()
+}
+
+func _bytesCombine(pBytes ...[]byte)[]byte{
+    return bytes.Join(pBytes, []byte(""))
+}
+
+func (tp *TKGTOOLS)ResStar(serviceNwName string, rand *[16]byte, res *[8]byte, ck *[16]byte, ik *[16]byte)[]byte{
+  secret := _bytesCombine((*ck)[:], (*ik)[:])
+  snnBytes := []byte(serviceNwName)
+  lsnn := len(snnBytes)
+  lsnnBytes := _intToBytes(lsnn)[6:]
+  fmt.Println(lsnnBytes)
+  message := _bytesCombine([]byte{0x6B}, snnBytes, lsnnBytes, (*rand)[:], []byte{0x00, 0x10}, (*res)[:], []byte{0x00, 0x08})
+  hash := hmac.New(sha256.New, secret)
+  hash.Write(message)
+  sum := hash.Sum(nil)
+  return sum[len(sum)-16:]
 }
